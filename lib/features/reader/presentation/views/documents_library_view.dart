@@ -191,7 +191,7 @@ class _DocumentsLibraryViewState extends ConsumerState<DocumentsLibraryView> {
           'Markdown Reader',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
             fontSize: 22,
-            fontWeight: FontWeight.w500,
+            fontWeight: FontWeight.w600,
           ),
         ),
         centerTitle: false,
@@ -238,8 +238,8 @@ class _DocumentsLibraryViewState extends ConsumerState<DocumentsLibraryView> {
                 // Primary page heading: "My documents"
                 Text(
                   isEmptyState ? 'Your reading space' : 'My documents',
-                  style: const TextStyle(
-                    fontSize: 28,
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontSize: 22,
                     fontWeight: FontWeight.w600,
                     letterSpacing: -0.5,
                   ),
@@ -251,7 +251,7 @@ class _DocumentsLibraryViewState extends ConsumerState<DocumentsLibraryView> {
                   isEmptyState
                       ? 'Open a Markdown, Word, or PDF document and pick up right where you left off.'
                       : 'Pick up where you left off.',
-                  style: TextStyle(
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     fontSize: 16,
                     fontWeight: FontWeight.w400,
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -288,17 +288,17 @@ class _DocumentsLibraryViewState extends ConsumerState<DocumentsLibraryView> {
                           ),
                         ),
                         const SizedBox(height: 20),
-                        const Text(
+                        Text(
                           'Nothing open yet',
-                          style: TextStyle(
-                            fontSize: 18,
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontSize: 16,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         const SizedBox(height: 6),
                         Text(
                           'Select a .md, .docx, or .pdf file from your device',
-                          style: TextStyle(
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             fontSize: 14,
                             color: Theme.of(
                               context,
@@ -318,10 +318,10 @@ class _DocumentsLibraryViewState extends ConsumerState<DocumentsLibraryView> {
                       key: const Key('open-file-button'),
                       onPressed: state.isLoading ? null : _openFilePicker,
                       icon: const Icon(Icons.folder_open),
-                      label: const Text(
+                      label: Text(
                         'Open Markdown file',
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 14,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -345,10 +345,10 @@ class _DocumentsLibraryViewState extends ConsumerState<DocumentsLibraryView> {
                               .read(readerViewModelProvider.notifier)
                               .loadSampleDocuments(),
                       icon: const Icon(Icons.auto_stories_outlined),
-                      label: const Text(
+                      label: Text(
                         'Try sample documents',
-                        style: TextStyle(
-                          fontSize: 15,
+                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                          fontSize: 14,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -363,9 +363,12 @@ class _DocumentsLibraryViewState extends ConsumerState<DocumentsLibraryView> {
                   const SizedBox(height: 28),
 
                   // Wireframe 01: Recent files section
-                  const Text(
+                  Text(
                     'Recent files',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 12),
                   Container(
@@ -392,9 +395,9 @@ class _DocumentsLibraryViewState extends ConsumerState<DocumentsLibraryView> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
+                              Text(
                                 'Your recent documents appear here',
-                                style: TextStyle(
+                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                   fontWeight: FontWeight.w600,
                                   fontSize: 14,
                                 ),
@@ -402,7 +405,7 @@ class _DocumentsLibraryViewState extends ConsumerState<DocumentsLibraryView> {
                               const SizedBox(height: 2),
                               Text(
                                 'Available even after app restarts',
-                                style: TextStyle(
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                   fontSize: 12,
                                   color: Theme.of(
                                     context,
@@ -423,10 +426,10 @@ class _DocumentsLibraryViewState extends ConsumerState<DocumentsLibraryView> {
                       key: const Key('open-file-button'),
                       onPressed: state.isLoading ? null : _openFilePicker,
                       icon: const Icon(Icons.add),
-                      label: const Text(
+                      label: Text(
                         'Open Markdown File',
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 14,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -462,12 +465,18 @@ class _DocumentsLibraryViewState extends ConsumerState<DocumentsLibraryView> {
                         Expanded(
                           child: TextField(
                             controller: _searchController,
-                            style: const TextStyle(fontSize: 15),
-                            decoration: const InputDecoration(
+                            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                              fontSize: 16,
+                            ),
+                            decoration: InputDecoration(
                               hintText: 'Search recent files',
+                              hintStyle: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                fontSize: 16,
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              ),
                               border: InputBorder.none,
                               isDense: true,
-                              contentPadding: EdgeInsets.symmetric(
+                              contentPadding: const EdgeInsets.symmetric(
                                 vertical: 12,
                               ),
                             ),
@@ -499,10 +508,10 @@ class _DocumentsLibraryViewState extends ConsumerState<DocumentsLibraryView> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      Text(
                         'Recent files',
-                        style: TextStyle(
-                          fontSize: 18,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontSize: 22,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -548,7 +557,7 @@ class _DocumentsLibraryViewState extends ConsumerState<DocumentsLibraryView> {
                         ),
                         child: Text(
                           entry.key,
-                          style: TextStyle(
+                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
                             letterSpacing: 0.8,
@@ -620,8 +629,8 @@ class _DocumentsLibraryViewState extends ConsumerState<DocumentsLibraryView> {
                                                     maxLines: 1,
                                                     overflow:
                                                         TextOverflow.ellipsis,
-                                                    style: const TextStyle(
-                                                      fontSize: 15,
+                                                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                                      fontSize: 16,
                                                       fontWeight:
                                                           FontWeight.w600,
                                                     ),
@@ -643,8 +652,8 @@ class _DocumentsLibraryViewState extends ConsumerState<DocumentsLibraryView> {
                                                   ),
                                                   child: Text(
                                                     fileStyle.$4,
-                                                    style: TextStyle(
-                                                      fontSize: 10,
+                                                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                                      fontSize: 11,
                                                       fontWeight:
                                                           FontWeight.bold,
                                                       letterSpacing: 0.5,
@@ -662,8 +671,8 @@ class _DocumentsLibraryViewState extends ConsumerState<DocumentsLibraryView> {
                                             recent.openedAt,
                                             recent.sizeInBytes,
                                           ),
-                                          style: TextStyle(
-                                            fontSize: 13,
+                                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                            fontSize: 12,
                                             color: Theme.of(
                                               context,
                                             ).colorScheme.onSurfaceVariant,

@@ -148,9 +148,9 @@ void main() {
         ),
       );
 
-      // Verify "My documents" is the primary heading (28sp, FontWeight.w600)
+      // Verify "My documents" is the primary heading (22sp, FontWeight.w600, headlineSmall)
       final headingText = tester.widget<Text>(find.text('My documents'));
-      expect(headingText.style?.fontSize, 28);
+      expect(headingText.style?.fontSize, 22);
       expect(headingText.style?.fontWeight, FontWeight.w600);
 
       // Verify subtitle "Pick up where you left off." (16sp, FontWeight.w400)
