@@ -89,18 +89,45 @@ class FileActionsBottomSheet extends ConsumerWidget {
                 ),
                 child: Row(
                   children: [
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: iconBgColor,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        Icons.description_outlined,
-                        color: primaryIconColor,
-                        size: 24,
-                      ),
+                    Builder(
+                      builder: (context) {
+                        final lower = recent.fileName.toLowerCase();
+                        IconData icon = Icons.description_outlined;
+                        Color iconColor = primaryIconColor;
+                        Color bgColor = iconBgColor;
+
+                        if (lower.endsWith('.pdf')) {
+                          icon = Icons.picture_as_pdf_outlined;
+                          iconColor = isDark
+                              ? const Color(0xFFF87171)
+                              : const Color(0xFFDC2626);
+                          bgColor = isDark
+                              ? const Color(0xFF3F1D20)
+                              : const Color(0xFFFEE2E2);
+                        } else if (lower.endsWith('.docx')) {
+                          icon = Icons.article_outlined;
+                          iconColor = isDark
+                              ? const Color(0xFF60A5FA)
+                              : const Color(0xFF2563EB);
+                          bgColor = isDark
+                              ? const Color(0xFF1E2E4B)
+                              : const Color(0xFFDBEAFE);
+                        }
+
+                        return Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: bgColor,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            icon,
+                            color: iconColor,
+                            size: 24,
+                          ),
+                        );
+                      },
                     ),
                     const SizedBox(width: 14),
                     Expanded(

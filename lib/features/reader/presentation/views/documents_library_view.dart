@@ -111,28 +111,52 @@ class _DocumentsLibraryViewState extends ConsumerState<DocumentsLibraryView> {
 
   Future<void> _openFilePicker() async {
     final viewModel = ref.read(readerViewModelProvider.notifier);
-    await viewModel.openFile();
-    if (!mounted) return;
-    final doc = ref.read(readerViewModelProvider).document;
-    if (doc != null) {
-      await Navigator.of(context).push(MarkdownReaderScreen.route(doc));
-      if (mounted) {
-        ref.read(readerViewModelProvider.notifier).refreshRecents();
-      }
+    final doc = await viewModel.openFile();
+    if (!mounted || doc == null) return;
+    await Navigator.of(context).push(MarkdownReaderScreen.route(doc));
+    if (mounted) {
+      viewModel.closeDocument();
     }
   }
 
   Future<void> _openRecentDocument(RecentDocument recent) async {
     final viewModel = ref.read(readerViewModelProvider.notifier);
-    await viewModel.openRecent(recent.id);
-    if (!mounted) return;
-    final doc = ref.read(readerViewModelProvider).document;
-    if (doc != null) {
-      await Navigator.of(context).push(MarkdownReaderScreen.route(doc));
-      if (mounted) {
-        ref.read(readerViewModelProvider.notifier).refreshRecents();
-      }
+    final doc = await viewModel.openRecent(recent.id);
+    if (!mounted || doc == null) return;
+    await Navigator.of(context).push(MarkdownReaderScreen.route(doc));
+    if (mounted) {
+      viewModel.closeDocument();
     }
+  }
+
+  (IconData, Color, Color, String) _getFileStyle(
+    String fileName,
+    bool isDark,
+    Color defaultPrimary,
+    Color defaultBg,
+  ) {
+    final lower = fileName.toLowerCase();
+    if (lower.endsWith('.pdf')) {
+      return (
+        Icons.picture_as_pdf_outlined,
+        isDark ? const Color(0xFFF87171) : const Color(0xFFDC2626),
+        isDark ? const Color(0xFF3F1D20) : const Color(0xFFFEE2E2),
+        'PDF',
+      );
+    } else if (lower.endsWith('.docx')) {
+      return (
+        Icons.article_outlined,
+        isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB),
+        isDark ? const Color(0xFF1E2E4B) : const Color(0xFFDBEAFE),
+        'DOCX',
+      );
+    }
+    return (
+      Icons.description_outlined,
+      defaultPrimary,
+      defaultBg,
+      'MD',
+    );
   }
 
   @override
@@ -164,9 +188,13 @@ class _DocumentsLibraryViewState extends ConsumerState<DocumentsLibraryView> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          isEmptyState ? 'Markdown Reader' : 'My documents',
-          style: const TextStyle(fontWeight: FontWeight.bold),
+          'Markdown Reader',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            fontSize: 22,
+            fontWeight: FontWeight.w500,
+          ),
         ),
+        centerTitle: false,
         elevation: 0,
         actions: [
           IconButton(
@@ -182,7 +210,12 @@ class _DocumentsLibraryViewState extends ConsumerState<DocumentsLibraryView> {
       ),
       body: Column(
         children: [
-          if (state.isLoading) const LinearProgressIndicator(),
+          SizedBox(
+            height: 3,
+            child: state.isLoading
+                ? const LinearProgressIndicator(minHeight: 3)
+                : const SizedBox.shrink(),
+          ),
           if (state.errorMessage != null)
             MaterialBanner(
               content: Text(state.errorMessage!),
@@ -200,28 +233,32 @@ class _DocumentsLibraryViewState extends ConsumerState<DocumentsLibraryView> {
             ),
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
               children: [
-                // Hero Header
+                // Primary page heading: "My documents"
                 Text(
-                  isEmptyState ? 'Your reading space' : 'Welcome back',
+                  isEmptyState ? 'Your reading space' : 'My documents',
                   style: const TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 28,
+                    fontWeight: FontWeight.w600,
                     letterSpacing: -0.5,
                   ),
                 ),
-                const SizedBox(height: 6),
+                // Spacing: Main heading to subtitle (8dp)
+                const SizedBox(height: 8),
+                // Subtitle: 16sp, FontWeight.w400, onSurfaceVariant
                 Text(
                   isEmptyState
-                      ? 'Open a Markdown document and pick up right where you left off.'
-                      : 'Continue reading where you left off.',
+                      ? 'Open a Markdown, Word, or PDF document and pick up right where you left off.'
+                      : 'Pick up where you left off.',
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w400,
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
-                const SizedBox(height: 20),
+                // Spacing: Subtitle to Open Markdown File button (24dp)
+                const SizedBox(height: 24),
 
                 if (isEmptyState) ...[
                   // Wireframe 01: Large Empty Card
@@ -260,7 +297,7 @@ class _DocumentsLibraryViewState extends ConsumerState<DocumentsLibraryView> {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          'Select a .md file from your device',
+                          'Select a .md, .docx, or .pdf file from your device',
                           style: TextStyle(
                             fontSize: 14,
                             color: Theme.of(
@@ -455,7 +492,8 @@ class _DocumentsLibraryViewState extends ConsumerState<DocumentsLibraryView> {
                     ),
                   ),
 
-                  const SizedBox(height: 24),
+                  // Spacing: Search field → Recent files (32dp)
+                  const SizedBox(height: 32),
 
                   // Wireframe 02: Section header with See all
                   Row(
@@ -479,7 +517,8 @@ class _DocumentsLibraryViewState extends ConsumerState<DocumentsLibraryView> {
                         ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  // Spacing: Recent files → TODAY (24dp)
+                  const SizedBox(height: 24),
 
                   if (filteredRecents.isEmpty)
                     Padding(
@@ -497,13 +536,16 @@ class _DocumentsLibraryViewState extends ConsumerState<DocumentsLibraryView> {
                     )
                   else ...[
                     // Group documents by date (TODAY, YESTERDAY, EARLIER)
-                    for (final entry in _groupDocuments(
+                    for (final (index, entry) in _groupDocuments(
                       _seeAll
                           ? filteredRecents
                           : filteredRecents.take(5).toList(),
-                    ).entries) ...[
+                    ).entries.indexed) ...[
                       Padding(
-                        padding: const EdgeInsets.only(top: 12, bottom: 8),
+                        padding: EdgeInsets.only(
+                          top: index == 0 ? 0 : 20,
+                          bottom: 8,
+                        ),
                         child: Text(
                           entry.key,
                           style: TextStyle(
@@ -518,7 +560,8 @@ class _DocumentsLibraryViewState extends ConsumerState<DocumentsLibraryView> {
                       ),
                       for (final recent in entry.value)
                         Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
+                          // Spacing: Between file cards (12dp)
+                          padding: const EdgeInsets.only(bottom: 12),
                           child: InkWell(
                             borderRadius: BorderRadius.circular(16),
                             onTap: () => _openRecentDocument(recent),
@@ -531,18 +574,29 @@ class _DocumentsLibraryViewState extends ConsumerState<DocumentsLibraryView> {
                               ),
                               child: Row(
                                 children: [
-                                  Container(
-                                    width: 44,
-                                    height: 44,
-                                    decoration: BoxDecoration(
-                                      color: iconBgColor,
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: Icon(
-                                      Icons.description_outlined,
-                                      color: primaryColor,
-                                      size: 22,
-                                    ),
+                                  Builder(
+                                    builder: (context) {
+                                      final fileStyle = _getFileStyle(
+                                        recent.fileName,
+                                        isDark,
+                                        primaryColor,
+                                        iconBgColor,
+                                      );
+                                      return Container(
+                                        width: 44,
+                                        height: 44,
+                                        decoration: BoxDecoration(
+                                          color: fileStyle.$3,
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                        ),
+                                        child: Icon(
+                                          fileStyle.$1,
+                                          color: fileStyle.$2,
+                                          size: 22,
+                                        ),
+                                      );
+                                    },
                                   ),
                                   const SizedBox(width: 14),
                                   Expanded(
@@ -550,14 +604,57 @@ class _DocumentsLibraryViewState extends ConsumerState<DocumentsLibraryView> {
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        Text(
-                                          recent.fileName,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: const TextStyle(
-                                            fontSize: 15,
-                                            fontWeight: FontWeight.w600,
-                                          ),
+                                        Builder(
+                                          builder: (context) {
+                                            final fileStyle = _getFileStyle(
+                                              recent.fileName,
+                                              isDark,
+                                              primaryColor,
+                                              iconBgColor,
+                                            );
+                                            return Row(
+                                              children: [
+                                                Expanded(
+                                                  child: Text(
+                                                    recent.fileName,
+                                                    maxLines: 1,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                    style: const TextStyle(
+                                                      fontSize: 15,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                    ),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 6),
+                                                Container(
+                                                  padding: const EdgeInsets
+                                                      .symmetric(
+                                                    horizontal: 6,
+                                                    vertical: 2,
+                                                  ),
+                                                  decoration: BoxDecoration(
+                                                    color: fileStyle.$3,
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                      6,
+                                                    ),
+                                                  ),
+                                                  child: Text(
+                                                    fileStyle.$4,
+                                                    style: TextStyle(
+                                                      fontSize: 10,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      letterSpacing: 0.5,
+                                                      color: fileStyle.$2,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            );
+                                          },
                                         ),
                                         const SizedBox(height: 3),
                                         Text(

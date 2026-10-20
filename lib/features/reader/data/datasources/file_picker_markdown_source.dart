@@ -6,13 +6,13 @@ import 'markdown_file_source.dart';
 class FilePickerMarkdownSource implements MarkdownFileSource {
   const FilePickerMarkdownSource();
 
-  static const int maxBytes = 2 * 1024 * 1024;
+  static const int maxBytes = 25 * 1024 * 1024;
 
   @override
   Future<PickedMarkdownData?> pick() async {
     final file = await FilePicker.pickFile(
       type: FileType.custom,
-      allowedExtensions: const ['md', 'markdown'],
+      allowedExtensions: const ['md', 'markdown', 'docx', 'pdf'],
     );
     if (file == null) return null;
 
@@ -29,6 +29,10 @@ class FilePickerMarkdownSource implements MarkdownFileSource {
       }
       builder.add(chunk);
     }
-    return PickedMarkdownData(name: file.name, bytes: builder.takeBytes());
+    return PickedMarkdownData(
+      name: file.name,
+      bytes: builder.takeBytes(),
+      path: file.path,
+    );
   }
 }

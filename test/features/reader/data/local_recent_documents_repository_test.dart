@@ -115,10 +115,15 @@ void main() {
       seedInitialSamples: true,
     );
     final recents = await seededRepo.list();
-    expect(recents, hasLength(3));
+    expect(recents, hasLength(4));
     expect(
       recents.map((r) => r.fileName),
-      containsAll(['README.md', 'Flutter_Architecture.md', 'API_Documentation.md']),
+      containsAll([
+        'README.md',
+        'Project_Proposal.docx',
+        'Offline_Guide.pdf',
+        'API_Documentation.md',
+      ]),
     );
   });
 }

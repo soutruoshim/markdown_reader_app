@@ -3,6 +3,7 @@ import '../../../../core/errors/document_failure.dart';
 import '../../domain/entities/markdown_document.dart';
 import '../../domain/repositories/document_repository.dart';
 import '../datasources/markdown_file_source.dart';
+import '../services/docx_to_markdown_converter.dart';
 
 class DocumentRepositoryImpl implements DocumentRepository {
   const DocumentRepositoryImpl(this._source);
@@ -15,15 +16,27 @@ class DocumentRepositoryImpl implements DocumentRepository {
       if (picked == null) return null;
 
       final lowerName = picked.name.toLowerCase();
-      if (!lowerName.endsWith('.md') && !lowerName.endsWith('.markdown')) {
+      final isMd = lowerName.endsWith('.md') || lowerName.endsWith('.markdown');
+      final isDocx = lowerName.endsWith('.docx');
+      final isPdf = lowerName.endsWith('.pdf');
+
+      if (!isMd && !isDocx && !isPdf) {
         throw const UnsupportedFileFailure();
       }
 
-      final text = utf8.decode(picked.bytes, allowMalformed: false);
+      String content = '';
+      if (isMd) {
+        content = utf8.decode(picked.bytes, allowMalformed: false);
+      } else if (isDocx) {
+        content = const DocxToMarkdownConverter().convert(picked.bytes);
+      }
+
       return MarkdownDocument(
         fileName: picked.name,
-        content: text,
+        content: content,
         sizeInBytes: picked.bytes.length,
+        filePath: picked.path,
+        rawBytes: picked.bytes,
       );
     } on DocumentFailure {
       rethrow;

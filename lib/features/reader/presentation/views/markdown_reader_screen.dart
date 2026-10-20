@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:pdfrx/pdfrx.dart';
 
 import '../../../settings/presentation/viewmodels/settings_view_model.dart';
 import '../../domain/entities/markdown_document.dart';
-import '../viewmodels/reader_view_model.dart';
 
 class MarkdownReaderScreen extends ConsumerStatefulWidget {
   const MarkdownReaderScreen({super.key, required this.document});
@@ -12,8 +12,32 @@ class MarkdownReaderScreen extends ConsumerStatefulWidget {
   final MarkdownDocument document;
 
   static Route<void> route(MarkdownDocument document) {
-    return MaterialPageRoute(
-      builder: (context) => MarkdownReaderScreen(document: document),
+    return PageRouteBuilder<void>(
+      settings: const RouteSettings(name: '/reader'),
+      transitionDuration: const Duration(milliseconds: 300),
+      reverseTransitionDuration: const Duration(milliseconds: 250),
+      pageBuilder: (context, animation, secondaryAnimation) =>
+          MarkdownReaderScreen(document: document),
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        final curvedAnimation = CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOutCubic,
+          reverseCurve: Curves.easeInCubic,
+        );
+        return SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(0.04, 0.0),
+            end: Offset.zero,
+          ).animate(curvedAnimation),
+          child: FadeTransition(
+            opacity: Tween<double>(
+              begin: 0.0,
+              end: 1.0,
+            ).animate(curvedAnimation),
+            child: child,
+          ),
+        );
+      },
     );
   }
 
@@ -26,6 +50,7 @@ class _MarkdownReaderScreenState extends ConsumerState<MarkdownReaderScreen> {
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
+  PdfViewerController? _pdfController;
 
   bool _isSearching = false;
   String _searchQuery = '';
@@ -39,14 +64,21 @@ class _MarkdownReaderScreenState extends ConsumerState<MarkdownReaderScreen> {
   @override
   void initState() {
     super.initState();
-    _totalPages = (widget.document.content.length / 1200).ceil().clamp(1, 99);
-    _scrollController.addListener(_onScroll);
+    if (widget.document.isPdf) {
+      _pdfController = PdfViewerController();
+      _totalPages = 1;
+    } else {
+      _totalPages = (widget.document.content.length / 1200).ceil().clamp(1, 99);
+      _scrollController.addListener(_onScroll);
+    }
   }
 
   @override
   void dispose() {
-    _scrollController.removeListener(_onScroll);
-    _scrollController.dispose();
+    if (!widget.document.isPdf) {
+      _scrollController.removeListener(_onScroll);
+      _scrollController.dispose();
+    }
     _searchController.dispose();
     _searchFocusNode.dispose();
     super.dispose();
@@ -138,6 +170,13 @@ class _MarkdownReaderScreenState extends ConsumerState<MarkdownReaderScreen> {
   }
 
   void _showDocumentDetails() {
+    final formatName = widget.document.isPdf
+        ? 'PDF Document (.pdf)'
+        : (widget.document.isDocx
+            ? 'Word Document (.docx)'
+            : 'Markdown Document (.md)');
+    final sizeKb = (widget.document.sizeInBytes / 1024).toStringAsFixed(1);
+
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
@@ -146,11 +185,16 @@ class _MarkdownReaderScreenState extends ConsumerState<MarkdownReaderScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Size: ${widget.document.sizeInBytes} bytes'),
+            Text('Format: $formatName'),
             const SizedBox(height: 8),
-            Text('Characters: ${widget.document.content.length}'),
+            Text('Size: $sizeKb KB (${widget.document.sizeInBytes} bytes)'),
             const SizedBox(height: 8),
-            const Text('Mode: Offline private reader'),
+            if (widget.document.isPdf)
+              Text('Pages: $_totalPages')
+            else
+              Text('Characters: ${widget.document.content.length}'),
+            const SizedBox(height: 8),
+            const Text('Mode: Offline reader'),
           ],
         ),
         actions: [
@@ -178,14 +222,7 @@ class _MarkdownReaderScreenState extends ConsumerState<MarkdownReaderScreen> {
 
     final baseFontSize = settings.fontSize;
 
-    return PopScope(
-      canPop: true,
-      onPopInvokedWithResult: (didPop, result) {
-        if (didPop) {
-          ref.read(readerViewModelProvider.notifier).closeDocument();
-        }
-      },
-      child: Scaffold(
+    return Scaffold(
         appBar: _isSearching
             ? AppBar(
                 leading: IconButton(
@@ -298,10 +335,7 @@ class _MarkdownReaderScreenState extends ConsumerState<MarkdownReaderScreen> {
             : AppBar(
                 leading: IconButton(
                   icon: const Icon(Icons.arrow_back),
-                  onPressed: () {
-                    ref.read(readerViewModelProvider.notifier).closeDocument();
-                    Navigator.of(context).maybePop();
-                  },
+                  onPressed: () => Navigator.of(context).maybePop(),
                 ),
                 title: Text(
                   widget.document.fileName,
@@ -315,17 +349,20 @@ class _MarkdownReaderScreenState extends ConsumerState<MarkdownReaderScreen> {
                     onPressed: _showDocumentDetails,
                     tooltip: 'Document details',
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.search),
-                    onPressed: _startSearch,
-                    tooltip: 'Find in document',
-                  ),
+                  if (!widget.document.isPdf)
+                    IconButton(
+                      icon: const Icon(Icons.search),
+                      onPressed: _startSearch,
+                      tooltip: 'Find in document',
+                    ),
                 ],
               ),
         body: Column(
           children: [
             Expanded(
-              child: Markdown(
+              child: widget.document.isPdf
+                  ? _buildPdfViewer()
+                  : Markdown(
                 controller: _scrollController,
                 data: _getProcessedContent(),
                 selectable: true,
@@ -479,7 +516,45 @@ class _MarkdownReaderScreenState extends ConsumerState<MarkdownReaderScreen> {
             ),
           ],
         ),
-      ),
+      );
+  }
+
+  Widget _buildPdfViewer() {
+    final filePath = widget.document.filePath;
+    final rawBytes = widget.document.rawBytes;
+
+    final params = PdfViewerParams(
+      onViewerReady: (doc, controller) {
+        if (!mounted) return;
+        setState(() {
+          _totalPages = doc.pages.isNotEmpty ? doc.pages.length : 1;
+          _currentPage = 1;
+          _readingProgress = (_currentPage / _totalPages).clamp(0.0, 1.0);
+        });
+      },
+      onPageChanged: (pageNumber) {
+        if (!mounted) return;
+        setState(() {
+          _currentPage = pageNumber ?? 1;
+          _readingProgress = (_currentPage / _totalPages).clamp(0.0, 1.0);
+        });
+      },
     );
+
+    if (filePath != null) {
+      return PdfViewer.file(
+        filePath,
+        controller: _pdfController,
+        params: params,
+      );
+    } else if (rawBytes != null) {
+      return PdfViewer.data(
+        rawBytes,
+        sourceName: widget.document.fileName,
+        controller: _pdfController,
+        params: params,
+      );
+    }
+    return const Center(child: Text('Unable to display PDF document'));
   }
 }

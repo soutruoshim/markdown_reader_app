@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/errors/document_failure.dart';
 import '../../data/repositories/local_recent_documents_repository.dart';
 import '../../di/reader_providers.dart';
+import '../../domain/entities/markdown_document.dart';
 import 'reader_state.dart';
 
 final readerViewModelProvider = NotifierProvider<ReaderViewModel, ReaderState>(
@@ -44,8 +45,8 @@ class ReaderViewModel extends Notifier<ReaderState> {
     }
   }
 
-  Future<void> openFile() async {
-    if (state.isLoading) return;
+  Future<MarkdownDocument?> openFile() async {
+    if (state.isLoading) return null;
     final previousDocument = state.document;
     final previousRecents = state.recentDocuments;
     state = ReaderState(
@@ -55,48 +56,51 @@ class ReaderViewModel extends Notifier<ReaderState> {
     );
     try {
       final document = await ref.read(openMarkdownDocumentProvider)();
-      if (!ref.mounted) return;
+      if (!ref.mounted) return null;
       if (document == null) {
         state = ReaderState(
           document: previousDocument,
           recentDocuments: previousRecents,
         );
-        return;
+        return null;
       }
       // Showing the document must not depend on saving to the recent index.
       state = ReaderState(document: document, recentDocuments: previousRecents);
       try {
         await ref.read(saveRecentDocumentProvider)(document);
         final recents = await ref.read(listRecentDocumentsProvider)();
-        if (!ref.mounted) return;
+        if (!ref.mounted) return document;
         state = ReaderState(document: document, recentDocuments: recents);
       } catch (_) {
-        if (!ref.mounted) return;
+        if (!ref.mounted) return document;
         state = ReaderState(
           document: document,
           recentDocuments: previousRecents,
           errorMessage: 'Opened file, but could not save it to Recent Files.',
         );
       }
+      return document;
     } on DocumentFailure catch (error) {
-      if (!ref.mounted) return;
+      if (!ref.mounted) return null;
       state = ReaderState(
         document: previousDocument,
         recentDocuments: previousRecents,
         errorMessage: error.message,
       );
+      return null;
     } catch (_) {
-      if (!ref.mounted) return;
+      if (!ref.mounted) return null;
       state = ReaderState(
         document: previousDocument,
         recentDocuments: previousRecents,
         errorMessage: 'Unexpected error opening the document.',
       );
+      return null;
     }
   }
 
-  Future<void> openRecent(String id) async {
-    if (state.isLoading) return;
+  Future<MarkdownDocument?> openRecent(String id) async {
+    if (state.isLoading) return null;
     final previousDocument = state.document;
     final previousRecents = state.recentDocuments;
     state = ReaderState(
@@ -107,10 +111,11 @@ class ReaderViewModel extends Notifier<ReaderState> {
     try {
       final document = await ref.read(openRecentDocumentProvider)(id);
       final recents = await ref.read(listRecentDocumentsProvider)();
-      if (!ref.mounted) return;
+      if (!ref.mounted) return null;
       state = ReaderState(document: document, recentDocuments: recents);
+      return document;
     } on DocumentFailure catch (error) {
-      if (!ref.mounted) return;
+      if (!ref.mounted) return null;
       state = ReaderState(
         document: previousDocument,
         recentDocuments: error is RecentDocumentMissingFailure
@@ -118,15 +123,18 @@ class ReaderViewModel extends Notifier<ReaderState> {
             : previousRecents,
         errorMessage: error.message,
       );
+      return null;
     } catch (_) {
-      if (!ref.mounted) return;
+      if (!ref.mounted) return null;
       state = ReaderState(
         document: previousDocument,
         recentDocuments: previousRecents,
         errorMessage: 'Could not reopen this recent file.',
       );
+      return null;
     }
   }
+
 
   Future<void> removeRecent(String id) async {
     if (state.isLoading) return;
