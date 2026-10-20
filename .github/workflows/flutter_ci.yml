@@ -1,0 +1,26 @@
+name: Flutter CI
+on:
+  push:
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Create missing native platform scaffolding
+        run: flutter create . --project-name markdown_reader --platforms=android
+      - name: Install packages
+        run: flutter pub get
+      - name: Format check
+        run: dart format --output=none --set-exit-if-changed lib test
+      - name: Static analysis
+        run: flutter analyze
+      - name: Tests
+        run: flutter test
+      - name: Android debug compilation
+        run: flutter build apk --debug
