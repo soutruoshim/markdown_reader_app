@@ -27,8 +27,8 @@ flutter_launcher_icons:
   ios: true
   macos:
     generate: true
-    image_path: "assets/icon/app_icon.png"
-  image_path: "assets/icon/app_icon.png"
+    image_path: "assets/icon/app-icon2.png"
+  image_path: "assets/icon/app-icon2.png"
   min_sdk_android: 21
 
 flutter:

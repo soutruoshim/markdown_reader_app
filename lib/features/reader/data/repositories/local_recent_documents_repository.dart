@@ -13,11 +13,11 @@ import '../../domain/repositories/recent_documents_repository.dart';
 /// This implementation is for Android, iOS and desktop, not Flutter Web.
 class LocalRecentDocumentsRepository implements RecentDocumentsRepository {
   LocalRecentDocumentsRepository({
-    required RecentIndexStore indexStore,
-    required Future<Directory> Function() applicationDirectory,
+    required this._indexStore,
+    required this._applicationDirectory,
     this.maxEntries = 20,
-  }) : _indexStore = indexStore,
-       _applicationDirectory = applicationDirectory;
+    this.seedInitialSamples = false,
+  });
 
   static const int _maxBytes = 2 * 1024 * 1024;
   static final RegExp _validId = RegExp(r'^[a-f0-9]{64}$');
@@ -25,6 +25,7 @@ class LocalRecentDocumentsRepository implements RecentDocumentsRepository {
   final RecentIndexStore _indexStore;
   final Future<Directory> Function() _applicationDirectory;
   final int maxEntries;
+  final bool seedInitialSamples;
 
   Future<Directory> _snapshotDirectory() async {
     final root = await _applicationDirectory();
@@ -43,10 +44,66 @@ class LocalRecentDocumentsRepository implements RecentDocumentsRepository {
     return File('${directory.path}/$id.md');
   }
 
+  Future<void> seedSampleDocuments() async {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final yesterday = today.subtract(const Duration(days: 1));
+
+    final samples = [
+      (
+        'README.md',
+        '# Getting Started\n\nWelcome to **Markdown Reader**, a sleek, focused offline-first reader.\n\n## Features\n- **Offline First**: All documents are stored securely in local cache.\n- **Reading Progress**: Sticky page counter and reading progress bar.\n- **Find in Document**: Real-time query search with match navigation.\n- **Customizable**: Dark and light modes with dynamic text scaling.\n\nEnjoy reading your Markdown documents anywhere!',
+        DateTime(now.year, now.month, now.day, 14, 45),
+      ),
+      (
+        'Flutter_Architecture.md',
+        '# Flutter Architecture Guide\n\nThis application is built following **Clean Architecture** and **MVVM** with Flutter Riverpod.\n\n## Architecture Layers\n\n| Layer | Responsibility | Components |\n|---|---|---|\n| **Presentation** | Views, widgets, state management | `Notifier`, `Widget` |\n| **Domain** | Business rules, use cases | `UseCase`, `Entity` |\n| **Data** | Data retrieval and persistence | `Repository`, `DataSource` |\n\n## Offline Strategy\nSnapshots are saved locally using SHA-256 hashes for fast reopening without picker permissions.',
+        DateTime(now.year, now.month, now.day, 11, 20),
+      ),
+      (
+        'API_Documentation.md',
+        '# API Documentation & Contracts\n\nTechnical specifications for the offline Markdown Reader core interfaces.\n\n## Specifications\n- **Max File Size**: 2 MB\n- **Snapshot Format**: SHA-256 keyed `.md` files\n- **Max Recents**: 20 files (configurable in Settings)\n\n## Use Cases\n- `OpenMarkdownDocument`\n- `ListRecentDocuments`\n- `SaveRecentDocument`\n- `RemoveRecentDocument`\n- `ClearRecentDocuments`',
+        DateTime(yesterday.year, yesterday.month, yesterday.day, 15, 30),
+      ),
+    ];
+
+    final entries = <RecentDocument>[];
+    for (final sample in samples) {
+      final name = sample.$1;
+      final content = sample.$2;
+      final openedAt = sample.$3;
+      final bytes = utf8.encode(content);
+      final id = sha256.convert(utf8.encode('$name\u0000$content')).toString();
+      final file = await _snapshotFile(id);
+      if (!await file.exists()) {
+        await file.writeAsBytes(bytes, flush: true);
+      }
+      entries.add(
+        RecentDocument(
+          id: id,
+          fileName: name,
+          sizeInBytes: bytes.length,
+          openedAt: openedAt.toUtc(),
+        ),
+      );
+    }
+    await _writeIndex(entries);
+  }
+
   @override
   Future<List<RecentDocument>> list() async {
     final raw = await _indexStore.read();
-    if (raw == null) return [];
+    if (raw == null) {
+      if (seedInitialSamples) {
+        try {
+          await seedSampleDocuments();
+          return await list();
+        } catch (_) {
+          return [];
+        }
+      }
+      return [];
+    }
     final decoded = jsonDecode(raw);
     if (decoded is! List) {
       throw const FormatException('Invalid recent file index');

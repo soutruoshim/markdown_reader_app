@@ -32,6 +32,7 @@ final recentDocumentsRepositoryProvider = Provider<RecentDocumentsRepository>(
   (ref) => LocalRecentDocumentsRepository(
     indexStore: SharedPreferencesRecentIndexStore(SharedPreferencesAsync()),
     applicationDirectory: getApplicationSupportDirectory,
+    seedInitialSamples: true,
   ),
 );
 

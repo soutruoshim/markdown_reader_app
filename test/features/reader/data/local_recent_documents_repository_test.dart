@@ -107,4 +107,18 @@ void main() {
     expect(await repo.list(), isEmpty);
     expect(await source.exists(), true);
   });
+
+  test('seeds wireframe sample documents when enabled and index is empty', () async {
+    final seededRepo = LocalRecentDocumentsRepository(
+      indexStore: metadata,
+      applicationDirectory: () async => directory,
+      seedInitialSamples: true,
+    );
+    final recents = await seededRepo.list();
+    expect(recents, hasLength(3));
+    expect(
+      recents.map((r) => r.fileName),
+      containsAll(['README.md', 'Flutter_Architecture.md', 'API_Documentation.md']),
+    );
+  });
 }

@@ -47,8 +47,19 @@ class FakeDocRepo implements DocumentRepository {
 
 void main() {
   testWidgets('renders Empty State (Wireframe 01)', (tester) async {
+    final container = ProviderContainer(
+      overrides: [
+        readerViewModelProvider.overrideWith(
+          () => _PreloadedReaderViewModel([]),
+        ),
+      ],
+    );
+
     await tester.pumpWidget(
-      const ProviderScope(child: MaterialApp(home: DocumentsLibraryView())),
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: DocumentsLibraryView()),
+      ),
     );
 
     expect(find.text('Markdown Reader'), findsOneWidget);
@@ -57,6 +68,7 @@ void main() {
     expect(find.text('Open Markdown file'), findsOneWidget);
     expect(find.text('Recent files'), findsOneWidget);
     expect(find.text('Your recent documents appear here'), findsOneWidget);
+    expect(find.text('Try sample documents'), findsOneWidget);
   });
 
   testWidgets(

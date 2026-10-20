@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/errors/document_failure.dart';
+import '../../data/repositories/local_recent_documents_repository.dart';
 import '../../di/reader_providers.dart';
 import 'reader_state.dart';
 
@@ -10,7 +11,18 @@ final readerViewModelProvider = NotifierProvider<ReaderViewModel, ReaderState>(
 
 class ReaderViewModel extends Notifier<ReaderState> {
   @override
-  ReaderState build() => const ReaderState();
+  ReaderState build() {
+    Future.microtask(() => refreshRecents());
+    return const ReaderState();
+  }
+
+  Future<void> loadSampleDocuments() async {
+    final repo = ref.read(recentDocumentsRepositoryProvider);
+    if (repo is LocalRecentDocumentsRepository) {
+      await repo.seedSampleDocuments();
+      await refreshRecents();
+    }
+  }
 
   Future<void> refreshRecents() async {
     try {

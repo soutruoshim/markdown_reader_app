@@ -115,7 +115,10 @@ class _DocumentsLibraryViewState extends ConsumerState<DocumentsLibraryView> {
     if (!mounted) return;
     final doc = ref.read(readerViewModelProvider).document;
     if (doc != null) {
-      Navigator.of(context).push(MarkdownReaderScreen.route(doc));
+      await Navigator.of(context).push(MarkdownReaderScreen.route(doc));
+      if (mounted) {
+        ref.read(readerViewModelProvider.notifier).refreshRecents();
+      }
     }
   }
 
@@ -125,7 +128,10 @@ class _DocumentsLibraryViewState extends ConsumerState<DocumentsLibraryView> {
     if (!mounted) return;
     final doc = ref.read(readerViewModelProvider).document;
     if (doc != null) {
-      Navigator.of(context).push(MarkdownReaderScreen.route(doc));
+      await Navigator.of(context).push(MarkdownReaderScreen.route(doc));
+      if (mounted) {
+        ref.read(readerViewModelProvider.notifier).refreshRecents();
+      }
     }
   }
 
@@ -290,7 +296,34 @@ class _DocumentsLibraryViewState extends ConsumerState<DocumentsLibraryView> {
                     ),
                   ),
 
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 12),
+
+                  SizedBox(
+                    height: 48,
+                    child: OutlinedButton.icon(
+                      key: const Key('try-sample-button'),
+                      onPressed: state.isLoading
+                          ? null
+                          : () => ref
+                              .read(readerViewModelProvider.notifier)
+                              .loadSampleDocuments(),
+                      icon: const Icon(Icons.auto_stories_outlined),
+                      label: const Text(
+                        'Try sample documents',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 28),
 
                   // Wireframe 01: Recent files section
                   const Text(
