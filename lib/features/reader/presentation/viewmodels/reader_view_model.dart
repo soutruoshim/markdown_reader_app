@@ -33,7 +33,7 @@ class ReaderViewModel extends Notifier<ReaderState> {
         recentDocuments: recents,
         isLoading: state.isLoading,
       );
-    } catch (_) {
+    } catch (e) {
       if (!ref.mounted) return;
       state = ReaderState(
         document: state.document,

@@ -13,27 +13,28 @@ class SettingsViewModel extends Notifier<ReaderSettings> {
   static const _keyKeepOffline = 'settings_keep_offline_copies';
   static const _keyMaxRecents = 'settings_max_recent_files';
 
-  SharedPreferencesAsync? _prefs;
-
   @override
   ReaderSettings build() {
-    try {
-      _prefs = SharedPreferencesAsync();
-      _loadSettings();
-    } catch (_) {
-      _prefs = null;
-    }
+    _loadSettings();
     return const ReaderSettings();
   }
 
-  Future<void> _loadSettings() async {
-    final prefs = _prefs;
-    if (prefs == null) return;
+  Future<SharedPreferences?> _getPrefs() async {
     try {
-      final themeStr = await prefs.getString(_keyTheme);
-      final fontSize = await prefs.getDouble(_keyFontSize);
-      final keepOffline = await prefs.getBool(_keyKeepOffline);
-      final maxRecents = await prefs.getInt(_keyMaxRecents);
+      return await SharedPreferences.getInstance();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _loadSettings() async {
+    try {
+      final prefs = await _getPrefs();
+      if (prefs == null) return;
+      final themeStr = prefs.getString(_keyTheme);
+      final fontSize = prefs.getDouble(_keyFontSize);
+      final keepOffline = prefs.getBool(_keyKeepOffline);
+      final maxRecents = prefs.getInt(_keyMaxRecents);
 
       ThemeMode theme = ThemeMode.system;
       if (themeStr == 'light') theme = ThemeMode.light;
@@ -52,15 +53,14 @@ class SettingsViewModel extends Notifier<ReaderSettings> {
 
   Future<void> setThemeMode(ThemeMode mode) async {
     state = state.copyWith(themeMode: mode);
-    final prefs = _prefs;
-    if (prefs == null) return;
     try {
+      final prefs = await _getPrefs();
       final str = mode == ThemeMode.light
           ? 'light'
           : mode == ThemeMode.dark
           ? 'dark'
           : 'system';
-      await prefs.setString(_keyTheme, str);
+      await prefs?.setString(_keyTheme, str);
     } catch (_) {}
   }
 
@@ -74,28 +74,25 @@ class SettingsViewModel extends Notifier<ReaderSettings> {
 
   Future<void> setFontSize(double size) async {
     state = state.copyWith(fontSize: size);
-    final prefs = _prefs;
-    if (prefs == null) return;
     try {
-      await prefs.setDouble(_keyFontSize, size);
+      final prefs = await _getPrefs();
+      await prefs?.setDouble(_keyFontSize, size);
     } catch (_) {}
   }
 
   Future<void> setKeepOfflineCopies(bool keep) async {
     state = state.copyWith(keepOfflineCopies: keep);
-    final prefs = _prefs;
-    if (prefs == null) return;
     try {
-      await prefs.setBool(_keyKeepOffline, keep);
+      final prefs = await _getPrefs();
+      await prefs?.setBool(_keyKeepOffline, keep);
     } catch (_) {}
   }
 
   Future<void> setMaxRecentFiles(int max) async {
     state = state.copyWith(maxRecentFiles: max);
-    final prefs = _prefs;
-    if (prefs == null) return;
     try {
-      await prefs.setInt(_keyMaxRecents, max);
+      final prefs = await _getPrefs();
+      await prefs?.setInt(_keyMaxRecents, max);
     } catch (_) {}
   }
 }

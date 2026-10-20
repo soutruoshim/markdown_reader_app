@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../data/datasources/file_picker_markdown_source.dart';
 import '../data/datasources/markdown_file_source.dart';
@@ -30,7 +29,7 @@ final openMarkdownDocumentProvider = Provider<OpenMarkdownDocument>(
 
 final recentDocumentsRepositoryProvider = Provider<RecentDocumentsRepository>(
   (ref) => LocalRecentDocumentsRepository(
-    indexStore: SharedPreferencesRecentIndexStore(SharedPreferencesAsync()),
+    indexStore: const SharedPreferencesRecentIndexStore(),
     applicationDirectory: getApplicationSupportDirectory,
     seedInitialSamples: true,
   ),
