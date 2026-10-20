@@ -47,6 +47,12 @@ class MarkdownReaderApp extends ConsumerWidget {
         elevation: 0,
         centerTitle: false,
       ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          backgroundColor: const Color(0xFF4F46E5),
+          foregroundColor: Colors.white,
+        ),
+      ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: const Color(0xFF1A1D24),
         indicatorColor: const Color(0xFF2C3348),

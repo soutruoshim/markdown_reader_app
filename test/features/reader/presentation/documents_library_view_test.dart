@@ -169,6 +169,34 @@ void main() {
       expect(find.byType(MarkdownReaderScreen), findsOneWidget);
     },
   );
+
+  testWidgets(
+    'renders Open Markdown file button with dark mode support',
+    (tester) async {
+      final container = ProviderContainer(
+        overrides: [
+          readerViewModelProvider.overrideWith(
+            () => _PreloadedReaderViewModel([]),
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            theme: ThemeData.dark(),
+            home: const DocumentsLibraryView(),
+          ),
+        ),
+      );
+
+      final button =
+          tester.widget<FilledButton>(find.byKey(const Key('open-file-button')));
+      expect(button.style?.backgroundColor?.resolve({}), const Color(0xFF4F46E5));
+      expect(button.style?.foregroundColor?.resolve({}), Colors.white);
+    },
+  );
 }
 
 class _PreloadedReaderViewModel extends ReaderViewModel {

@@ -318,7 +318,7 @@ class _DocumentsLibraryViewState extends ConsumerState<DocumentsLibraryView> {
                       key: const Key('open-file-button'),
                       onPressed: state.isLoading ? null : _openFilePicker,
                       icon: const Icon(Icons.folder_open),
-                      label: Text(
+                      label: const Text(
                         'Open Markdown file',
                         style: TextStyle(
                           fontSize: 14,
@@ -326,6 +326,10 @@ class _DocumentsLibraryViewState extends ConsumerState<DocumentsLibraryView> {
                         ),
                       ),
                       style: FilledButton.styleFrom(
+                        backgroundColor: isDark
+                            ? const Color(0xFF4F46E5)
+                            : primaryColor,
+                        foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14),
                         ),
@@ -350,9 +354,14 @@ class _DocumentsLibraryViewState extends ConsumerState<DocumentsLibraryView> {
                         style: Theme.of(context).textTheme.labelLarge?.copyWith(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
+                          color: isDark ? const Color(0xFFE5E7EB) : null,
                         ),
                       ),
                       style: OutlinedButton.styleFrom(
+                        foregroundColor: isDark ? const Color(0xFFE5E7EB) : primaryColor,
+                        side: BorderSide(
+                          color: isDark ? const Color(0xFF3F4555) : borderColor,
+                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14),
                         ),
@@ -426,7 +435,7 @@ class _DocumentsLibraryViewState extends ConsumerState<DocumentsLibraryView> {
                       key: const Key('open-file-button'),
                       onPressed: state.isLoading ? null : _openFilePicker,
                       icon: const Icon(Icons.add),
-                      label: Text(
+                      label: const Text(
                         'Open Markdown File',
                         style: TextStyle(
                           fontSize: 14,
@@ -434,6 +443,10 @@ class _DocumentsLibraryViewState extends ConsumerState<DocumentsLibraryView> {
                         ),
                       ),
                       style: FilledButton.styleFrom(
+                        backgroundColor: isDark
+                            ? const Color(0xFF4F46E5)
+                            : primaryColor,
+                        foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14),
                         ),
